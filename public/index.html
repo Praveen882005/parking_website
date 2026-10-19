@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>ParkSense — Smart Parking</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"><span class="brand-dot"></span></div>
+        <div><strong>ParkSense</strong><small>IoT CONTROL CENTER</small></div>
+      </div>
+      <div class="site-pill"><span class="pulse"></span> Prototype site <span class="pill-right">LIVE</span></div>
+      <nav class="nav">
+        <a class="nav-link active" href="#overview"><span class="nav-icon">▦</span> Overview</a>
+        <a class="nav-link" href="#monitor"><span class="nav-icon">⌁</span> Live monitoring</a>
+        <a class="nav-link" href="#history"><span class="nav-icon">◷</span> Session history</a>
+        <a class="nav-link" href="#settings"><span class="nav-icon">⚙</span> Configuration</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="connection-card">
+          <div class="connection-heading"><span class="status-dot" id="sideStatusDot"></span><span id="sideStatusText">Waiting for device</span></div>
+          <p id="sideStatusSub">Connect your ESP32 to begin</p>
+        </div>
+        <div class="sidebar-foot"><span class="mini-logo">PS</span> ParkSense <span class="muted">v1.0</span></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">PARKING OPERATIONS <span class="eyebrow-line"></span> <span id="todayLabel">TODAY</span></div>
+          <h1>Dashboard <span class="heading-period">/ Overview</span></h1>
+        </div>
+        <div class="topbar-actions">
+          <div class="live-label"><span class="pulse"></span> LIVE DATA</div>
+          <button class="icon-button" id="refreshBtn" title="Refresh data" aria-label="Refresh data">↻</button>
+          <div class="avatar">PS</div>
+        </div>
+      </header>
+
+      <section class="welcome-row">
+        <div><h2>Your parking, at a glance.</h2><p>Monitor vehicle activity, parking fees, and device telemetry in one place.</p></div>
+        <div class="updated"><span class="tiny-dot"></span> Last updated <strong id="lastUpdated">—</strong></div>
+      </section>
+
+      <section class="metrics-grid" id="overview">
+        <article class="metric-card primary-card">
+          <div class="metric-top"><span class="metric-label">CURRENT PARKING STATUS</span><span class="metric-icon car-icon">▣</span></div>
+          <div class="status-value"><span class="big-status-dot" id="parkingDot"></span><strong id="parkingStatus">Available</strong></div>
+          <div class="metric-foot"><span id="sessionHint">Waiting for vehicle detection</span><span class="mini-tag" id="slotTag">SLOT 01</span></div>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><span class="metric-label">ACTIVE DURATION</span><span class="metric-icon blue">◷</span></div>
+          <div class="metric-value" id="durationValue">00:00:00</div>
+          <div class="metric-foot"><span id="entryValue">No active session</span><span class="metric-caption">HH : MM : SS</span></div>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><span class="metric-label">CURRENT PARKING FEE</span><span class="metric-icon green">₹</span></div>
+          <div class="metric-value" id="feeValue">₹0.00</div>
+          <div class="metric-foot"><span id="rateCaption">₹30 per started hour</span><span class="metric-caption">INR</span></div>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><span class="metric-label">REVENUE TODAY</span><span class="metric-icon yellow">↗</span></div>
+          <div class="metric-value" id="revenueValue">₹0.00</div>
+          <div class="metric-foot"><span id="sessionsCaption">0 completed sessions</span><span class="metric-caption">TODAY</span></div>
+        </article>
+      </section>
+
+      <section class="content-grid" id="monitor">
+        <article class="panel monitoring-panel">
+          <div class="panel-header">
+            <div><div class="section-kicker">REAL-TIME TELEMETRY</div><h3>Live parking monitor</h3></div>
+            <span class="outline-tag" id="monitorTag">AWAITING DATA</span>
+          </div>
+          <div class="parking-visual">
+            <div class="lane-label"><span>ENTRY</span><span>EXIT</span></div>
+            <div class="parking-lane">
+              <div class="lane-line"></div>
+              <div class="parking-bay">
+                <div class="bay-corner top-left"></div><div class="bay-corner top-right"></div>
+                <div class="bay-corner bottom-left"></div><div class="bay-corner bottom-right"></div>
+                <div class="car-illustration" id="carIllustration">
+                  <div class="car-window front"></div><div class="car-window rear"></div>
+                  <div class="wheel wheel-one"></div><div class="wheel wheel-two"></div>
+                  <div class="car-light light-one"></div><div class="car-light light-two"></div>
+                </div>
+                <div class="bay-label" id="bayLabel">SLOT 01 · AVAILABLE</div>
+              </div>
+              <div class="lane-dashes"><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+            <div class="visual-legend"><span><i class="legend-dot available"></i> Available</span><span><i class="legend-dot occupied"></i> Occupied</span><span class="sensor-legend"><i class="legend-dot sensor"></i> IR sensor · GPIO 27</span></div>
+          </div>
+          <div class="panel-footer"><div class="sensor-state"><span class="sensor-ring" id="sensorRing">⌁</span><div><strong id="sensorState">Sensor awaiting data</strong><small id="sensorSub">IR obstacle sensor · GPIO 27</small></div></div><div class="reading-badge" id="rawReading">RAW —</div></div>
+        </article>
+
+        <article class="panel power-panel">
+          <div class="panel-header">
+            <div><div class="section-kicker">ELECTRICAL TELEMETRY</div><h3>Power & energy</h3></div>
+            <span class="metric-icon yellow">ϟ</span>
+          </div>
+          <div class="power-main">
+            <div><span class="metric-label">INSTANT POWER</span><div class="power-number" id="powerValue">— <small>W</small></div></div>
+            <div class="power-glyph">ϟ</div>
+          </div>
+          <div class="power-meter"><div id="powerMeterFill"></div></div>
+          <div class="power-meter-labels"><span>0 W</span><span>Illustrative scale · 100 W</span></div>
+          <div class="electrical-list">
+            <div class="electrical-row"><span><i class="row-icon voltage">V</i> Voltage</span><strong id="voltageValue">— V</strong></div>
+            <div class="electrical-row"><span><i class="row-icon current">A</i> Current</span><strong id="currentValue">— A</strong></div>
+            <div class="electrical-row"><span><i class="row-icon energy">E</i> Energy used</span><strong id="energyValue">— Wh</strong></div>
+          </div>
+          <div class="measurement-note"><span>ⓘ</span> Actual electrical readings need compatible voltage/current measurement hardware. IR alone cannot measure power.</div>
+        </article>
+      </section>
+
+      <section class="lower-grid">
+        <article class="panel history-panel" id="history">
+          <div class="panel-header history-heading">
+            <div><div class="section-kicker">RECENT ACTIVITY</div><h3>Parking sessions</h3></div>
+            <div class="history-actions"><input type="date" id="historyDate" aria-label="Filter by date"><select id="historyStatus" aria-label="Filter by status"><option value="all">All sessions</option><option value="completed">Completed</option><option value="active">Active</option></select><button class="button button-secondary button-small" id="exportBtn">↓ Export CSV</button></div>
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>SESSION</th><th>ENTRY TIME</th><th>EXIT TIME</th><th>DURATION</th><th>FEE</th><th>STATUS</th></tr></thead><tbody id="historyBody"><tr><td colspan="6" class="empty-cell">No sessions recorded yet.</td></tr></tbody></table>
+          </div>
+          <div class="table-bottom"><span id="historyCount">Showing 0 sessions</span><button class="text-button" id="clearFilterBtn">Clear filters ↗</button></div>
+        </article>
+        <article class="panel device-panel">
+          <div class="panel-header"><div><div class="section-kicker">DEVICE HEALTH</div><h3>ESP32 connection</h3></div><span class="device-icon">⌘</span></div>
+          <div class="device-status-row"><div class="device-chip"><span class="status-dot" id="deviceDot"></span><strong id="deviceStatus">Offline</strong></div><span class="outline-tag" id="deviceTag">NO HEARTBEAT</span></div>
+          <div class="device-details">
+            <div><span>Last heartbeat</span><strong id="heartbeatValue">Never received</strong></div>
+            <div><span>Device uptime</span><strong id="uptimeValue">—</strong></div>
+            <div><span>Wi-Fi signal (RSSI)</span><strong id="rssiValue">—</strong></div>
+            <div><span>Sensor GPIO</span><strong>GPIO 27</strong></div>
+          </div>
+          <div class="device-help"><span>↗</span><div><strong>Waiting for your ESP32?</strong><p>Upload the included Arduino sketch and set its API URL to this computer's local IP address.</p></div></div>
+          <button class="button button-secondary full-width" id="apiHelpBtn">View connection instructions ↗</button>
+        </article>
+      </section>
+
+      <section class="bottom-grid" id="settings">
+        <article class="panel settings-panel">
+          <div class="panel-header"><div><div class="section-kicker">PARKING RULES</div><h3>Configuration</h3></div><span class="metric-icon blue">⚙</span></div>
+          <form id="configForm" class="config-form">
+            <label>Parking rate <span>₹ INR</span><div class="input-with-prefix"><span>₹</span><input type="number" id="hourlyRate" min="0" max="100000" step="1" value="30" required></div></label>
+            <label>Device offline timeout <span>seconds</span><div class="input-with-prefix"><span>◷</span><input type="number" id="heartbeatTimeout" min="5" max="600" step="1" value="20" required></div></label>
+            <div class="billing-note"><span>ⓘ</span> Billing rule: every started hour is charged at the configured rate. Example: 61 minutes costs two hours.</div>
+            <button class="button button-primary" type="submit">Save configuration <span>→</span></button>
+            <span id="configMessage" class="form-message" role="status"></span>
+          </form>
+        </article>
+        <article class="panel demo-panel">
+          <div class="panel-header"><div><div class="section-kicker">TEST THE DASHBOARD</div><h3>Prototype controls</h3></div><span class="demo-badge">DEMO</span></div>
+          <p class="demo-copy">Test the website before connecting the ESP32. Demo sessions are labelled as simulated data.</p>
+          <div class="demo-actions"><button class="button button-primary" id="demoEnterBtn">＋ Simulate vehicle entry</button><button class="button button-secondary" id="demoExitBtn">Simulate vehicle exit</button></div>
+          <div class="demo-warning"><span>!</span> Demo controls do not send signals to your hardware.</div>
+        </article>
+      </section>
+      <footer class="footer"><div><span class="footer-mark">PS</span> ParkSense <span class="muted">· ESP32 Smart Parking</span></div><div>Local prototype <span class="footer-dot"></span> <span id="footerTime">—</span></div></footer>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+  <div class="modal-backdrop" id="helpModal" hidden>
+    <div class="modal">
+      <div class="modal-header"><div><div class="section-kicker">ESP32 SETUP</div><h3>Connect your device</h3></div><button class="icon-button" id="closeHelpBtn" aria-label="Close">×</button></div>
+      <ol class="help-steps">
+        <li>Start this server on the laptop connected to the same Wi-Fi as your ESP32.</li>
+        <li>Find your laptop IPv4 address using <code>ipconfig</code> in Command Prompt.</li>
+        <li>In the Arduino sketch, set <code>API_URL</code> to <code>http://YOUR_LAPTOP_IP:3000/api/sensor</code>.</li>
+        <li>Keep the laptop and ESP32 on the same network. Allow Node.js through Windows Firewall if prompted.</li>
+        <li>Open <code>http://localhost:3000</code> on the laptop to see readings.</li>
+      </ol>
+      <div class="modal-note">The ESP32 reports occupancy and optional voltage/current/power fields. Do not connect a 5 V sensor output directly to an ESP32 GPIO.</div>
+      <button class="button button-primary full-width" id="closeHelpBtn2">Got it</button>
+    </div>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
